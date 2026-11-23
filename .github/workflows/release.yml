@@ -34,6 +34,7 @@ jobs:
       - name: Prepare release notes from tag message
         shell: bash
         run: |
+          git fetch --force origin "refs/tags/${{ github.ref_name }}:refs/tags/${{ github.ref_name }}"
           git tag -l --format='%(contents)' "${{ github.ref_name }}" > release-notes.md
           test -s release-notes.md || printf 'Windows Laptop Inspector %s' "${{ github.ref_name }}" > release-notes.md
 
