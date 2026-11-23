@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   build:
@@ -31,6 +32,26 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --icon=assets/icon.ico --name "WindowsLaptopInspector" inspector.py
 
+      - name: Upload unsigned EXE
+        id: upload-unsigned
+        uses: actions/upload-artifact@v4
+        with:
+          name: WindowsLaptopInspector-unsigned
+          path: dist/WindowsLaptopInspector.exe
+          if-no-files-found: error
+
+      - name: Submit signing request to SignPath
+        id: signpath
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: dist/signed
+
       - name: Prepare release notes from tag message
         shell: bash
         run: |
@@ -38,10 +59,10 @@ jobs:
           git tag -l --format='%(contents)' "${{ github.ref_name }}" > release-notes.md
           test -s release-notes.md || printf 'Windows Laptop Inspector %s' "${{ github.ref_name }}" > release-notes.md
 
-      - name: Upload EXE to GitHub Release
+      - name: Upload signed EXE to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/WindowsLaptopInspector.exe
+          files: dist/signed/WindowsLaptopInspector.exe
           body_path: release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
