@@ -1504,10 +1504,22 @@ def _default_export_path(fmt: str) -> str:
     return os.path.join(os.getcwd(), f"windows-laptop-inspector-{stamp}.{fmt}")
 
 
+def _emit_json(report):
+    """Print the report JSON, tolerating a windowed EXE with no stdout."""
+    if sys.stdout is None:
+        return
+    try:
+        print(json.dumps(report, ensure_ascii=False, default=str))
+    except Exception:
+        pass
+
+
 def main(argv=None):
     # Emit UTF-8 regardless of the console codepage so the Host tool and any
     # terminal read non-ASCII labels (—, ·, Burmese) correctly.
     for stream in (sys.stdout, sys.stderr):
+        if stream is None:
+            continue
         try:
             stream.reconfigure(encoding="utf-8")
         except Exception:
@@ -1547,7 +1559,10 @@ def main(argv=None):
     # interactive run (double-clicking the EXE or a bare `python inspector.py`)
     # builds an HTML dashboard and opens it in the browser.
     if not fmt_explicit:
-        if sys.stdout.isatty():
+        # A console (double-clicked console EXE or a terminal) and a windowed
+        # EXE (sys.stdout is None) both produce an HTML dashboard; a piped
+        # invocation (scripts / the DSH tool) returns JSON.
+        if sys.stdout is None or sys.stdout.isatty():
             fmt = "html"
             open_report = True
         else:
@@ -1575,8 +1590,16 @@ def main(argv=None):
         except OSError as exc:
             report["export"]["pdf"] = None
             report["export_error"] = str(exc)
+    elif fmt == "json" and output:
+        try:
+            with open(output, "w", encoding="utf-8") as fh:
+                json.dump(report, fh, ensure_ascii=False, indent=2, default=str)
+            report["export"]["json"] = output
+        except OSError as exc:
+            report["export"]["json"] = None
+            report["export_error"] = str(exc)
 
-    print(json.dumps(report, ensure_ascii=False, default=str))
+    _emit_json(report)
 
     if open_report and not no_open and report.get("export", {}).get("html"):
         try:
@@ -1584,7 +1607,7 @@ def main(argv=None):
         except Exception:
             pass
         # Keep the console open so a double-clicked EXE shows the summary.
-        if sys.stdout.isatty():
+        if sys.stdout is not None and sys.stdout.isatty():
             try:
                 input("\nReport opened in your browser. Press Enter to close…")
             except (EOFError, KeyboardInterrupt):

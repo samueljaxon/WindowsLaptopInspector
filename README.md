@@ -1,5 +1,7 @@
 # Windows Laptop Inspector
 
+[![Build and Release](https://github.com/samueljaxon/WindowsLaptopInspector/actions/workflows/release.yml/badge.svg)](https://github.com/samueljaxon/WindowsLaptopInspector/actions/workflows/release.yml)
+
 Inspect a Windows laptop's hardware, software, battery health, and overall condition — then export the result as JSON, HTML, or PDF. Available as a standalone Windows EXE, a Python CLI, and a [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin.
 
 ## Features
@@ -24,7 +26,7 @@ Download `WindowsLaptopInspector.exe` from the [latest release](../../releases/l
   ```powershell
   WindowsLaptopInspector.exe --format html
   WindowsLaptopInspector.exe --format pdf -o report.pdf
-  WindowsLaptopInspector.exe --format json
+  WindowsLaptopInspector.exe --format json -o report.json
   WindowsLaptopInspector.exe --lang my
   ```
 
@@ -49,10 +51,19 @@ This repository is also a DSH bundle. Install the local directory from **Plugins
 
 ```powershell
 python -m pip install pyinstaller
-python -m PyInstaller --onefile --console --name WindowsLaptopInspector --clean inspector.py
+pyinstaller --onefile --windowed --icon=assets/icon.ico --name "WindowsLaptopInspector" inspector.py
 ```
 
 The output is `dist\WindowsLaptopInspector.exe`.
+
+## Releasing
+
+Pushing an annotated `v*` tag triggers [.github/workflows/release.yml](.github/workflows/release.yml), which builds the EXE on `windows-latest` and attaches it to a GitHub Release with the tag message as the release notes:
+
+```powershell
+git tag -a v1.0.1 -m "Release notes here"
+git push origin v1.0.1
+```
 
 ## How it works
 
