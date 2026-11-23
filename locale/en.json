@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Windows Laptop Inspector",
+    "description": "Inspect a Windows laptop's hardware, battery health, and overall condition, then export the report as JSON, HTML, or PDF. Provides a 0-100 health score, a performance estimate, and plain-language recommendations.",
+    "detail": "docs/DETAIL.md"
+  }
+}

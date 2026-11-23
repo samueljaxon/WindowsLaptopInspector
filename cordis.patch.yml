@@ -1,0 +1,3 @@
+- insert:
+    - id: windows-laptop-inspector
+      name: '@local/windows-laptop-inspector'
